@@ -15,7 +15,7 @@
   <header>
     <nav>
       <h1>
-        <a href="/">Restaurant reviews</a>
+        <a href="/" tabindex=-1>Restaurant reviews</a>
       </h1>
     </nav>
   </header>
@@ -27,10 +27,10 @@
     <section>
       <div class="filter-options">
         <h2>Filter Results</h2>
-        <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" aria-label="Select Neighborhoods">
+        <select tabindex=0 id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" aria-label="Select Neighborhoods">
           <option value="all">All Neighborhoods</option>
         </select>
-        <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()" aria-label="Select Cuisines">
+        <select tabindex=0 id="cuisines-select" name="cuisines" onchange="updateRestaurants()" aria-label="Select Cuisines">
           <option value="all">All Cuisines</option>
         </select>
       </div>

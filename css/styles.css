@@ -91,7 +91,6 @@ nav h1 a {
   list-style: none;
   background-color: #eee;
   font-size: 17px;
-  margin: 0;
   /* width: calc(50% - 80px); */
   display: flex;
   flex-direction: row;
