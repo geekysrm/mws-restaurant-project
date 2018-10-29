@@ -1,82 +1,111 @@
-let cacheName = "mws-restaurant-app-v1";
+const staticCache = "mws-restaurant-static-v1";
+const dynamicPagesCache = "mws-restaurant-dynamic-pages-v1";
+const dynamicImagesCache = "mws-restaurant-dynamic-images-v1";
+const dynamicMapsCache = "mws-restaurant-dynamic-maps-v1";
 
-self.addEventListener("install", function(event) {
+const scripts = [
+  "https://unpkg.com/leaflet@1.3.1/dist/leaflet.js",
+  "build/js/index.min.js",
+  "build/js/restaurant.min.js"
+];
+const styles = [
+  "https://unpkg.com/leaflet@1.3.1/dist/leaflet.css",
+  "build/css/styles.min.css"
+];
+
+// Install Event
+self.addEventListener("install", event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(cacheName).then(function(cache) {
-      return cache.addAll([
-        "/",
-        "index.html",
-        "restaurant.html",
-        "/restaurant.html?id=1",
-        "/restaurant.html?id=2",
-        "/restaurant.html?id=3",
-        "/restaurant.html?id=4",
-        "/restaurant.html?id=5",
-        "/restaurant.html?id=6",
-        "/restaurant.html?id=7",
-        "/restaurant.html?id=8",
-        "/restaurant.html?id=9",
-        "/restaurant.html?id=10",
-        "js/dbhelper.js",
-        "js/restaurant_info.js",
-        "data/restaurants.json",
-        "img/1.jpg",
-        "img/2.jpg",
-        "img/3.jpg",
-        "img/4.jpg",
-        "img/5.jpg",
-        "img/6.jpg",
-        "img/7.jpg",
-        "img/8.jpg",
-        "img/9.jpg",
-        "img/10.jpg",
-        "js/main.js",
-        "css/styles.css",
-        "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.css"
-      ]);
-    })
+    caches
+      .open(staticCache)
+      .then(cache => {
+        cache.addAll(["/", ...styles, ...scripts]);
+      })
+      .catch(() => {
+        console.log("Some error while caching static assets!");
+      })
   );
 });
 
-self.addEventListener("activate", function(event) {
+// Activate Event
+self.addEventListener("activate", event => {
+  if (self.clients && clients.claim) {
+    clients.claim();
+  }
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames
-          .filter(function(cacheName) {
-            return (
-              cacheName.startsWith("mws-restaurant-app") &&
-              cacheName != cacheName
-            );
+    caches
+      .keys()
+      .then(cacheNames => {
+        return Promise.all(
+          cacheNames
+            .filter(cacheName => {
+              return cacheName.startsWith("mws-") && cacheName !== staticCache;
+            })
+            .map(cacheName => {
+              return caches.delete(cacheName);
+            })
+        ).catch(error => {
+          console.log("Error removing already existing cache!" + error);
+        });
+      })
+      .catch(error => {
+        console.log("Error removing already existing cache!" + error);
+      })
+  );
+});
+
+// Fetch Event
+self.addEventListener("fetch", event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return (
+        response ||
+        fetch(event.request)
+          .then(fetchResponse => {
+            if (
+              event.request.url.endsWith(".webp") ||
+              event.request.url.endsWith(".jpg")
+            ) {
+              return cacheDynamicRequestData(
+                dynamicImagesCache,
+                event.request.url,
+                fetchResponse.clone()
+              );
+            } else if (event.request.url.includes(".html")) {
+              return cacheDynamicRequestData(
+                dynamicPagesCache,
+                event.request.url,
+                fetchResponse.clone()
+              );
+            } else {
+              return cacheDynamicRequestData(
+                dynamicMapsCache,
+                event.request.url,
+                fetchResponse.clone()
+              );
+            }
           })
-          .map(function(cacheName) {
-            return caches.delete(cacheName);
+          .catch(error => {
+            console.log(
+              "Error saving to or fetching data from dynamic cache!" + error
+            );
           })
       );
     })
   );
 });
 
-self.addEventListener("fetch", function(event) {
-  let requestUrl = new URL(event.request.url);
-
-  if (requestUrl.origin === location.origin) {
-    if (requestUrl.pathname === "/") {
-      event.respondWith(caches.match("/"));
-      return;
-    }
-  }
-
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
-      // return response if in cache or else fetch from network
-      return response || fetch(event.request);
+function cacheDynamicRequestData(dynamicCacheName, url, fetchResponse) {
+  return caches
+    .open(dynamicCacheName)
+    .then(cache => {
+      cache.put(url, fetchResponse.clone());
+      return fetchResponse;
     })
-  );
-});
-
-self.addEventListener("message", function(event) {
-  if (event.data.action === "skipWaiting") {
-    self.skipWaiting();
-  }
-});
+    .catch(error => {
+      console.log(
+        "Error saving to or fetching data from dynamic cache!" + error
+      );
+    });
+}

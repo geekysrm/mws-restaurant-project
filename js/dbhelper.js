@@ -1,6 +1,8 @@
 /**
  * Common database helper functions.
  */
+import idb from "idb"; // Importing IDBPromised library from Jake Archibald : https://github.com/jakearchibald/idb
+
 class DBHelper {
   /**
    * Database URL.
@@ -9,27 +11,67 @@ class DBHelper {
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
     return `http://localhost:${port}/restaurants`;
-    //return `/data/restaurants.json`;
   }
 
+  // Init IndexedDB
+  static idbInit() {
+    return idb.open("mws-restaurant-db", 1, upgradeDb => {
+      switch (upgradeDb.oldVersion) {
+        case 0:
+          upgradeDb.createObjectStore("restaurants");
+      }
+    });
+  }
+
+  //Fetch all restaurants from IndexedDB
+  static getRestaurantsFromDb(dbPromise) {
+    return dbPromise.then(db => {
+      if (!db) return;
+      let tx = db.transaction("restaurants");
+      let restaurantsStore = tx.objectStore("restaurants");
+      return restaurantsStore.get("restaurant-list");
+    });
+  }
+
+  // Update new restaurants to IndexedDB
+  static updateRestaurantsInDb(restaurants, dbPromise) {
+    return dbPromise.then(db => {
+      if (!db) return;
+      let tx = db.transaction("restaurants", "readwrite");
+      let restaurantsStore = tx.objectStore("restaurants");
+      restaurantsStore.put(restaurants, "restaurant-list");
+      tx.complete;
+    });
+  }
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", DBHelper.DATABASE_URL);
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        // Got a success response from server!
-        const restaurants = JSON.parse(xhr.responseText);
+    const dbPromise = DBHelper.idbInit();
+
+    DBHelper.getRestaurantsFromDb(dbPromise)
+      .then(restaurants => {
+        if (restaurants && restaurants.length > 0) {
+          // Got restaurants from IndexedDB
+          callback(null, restaurants);
+        } else {
+          return fetch(DBHelper.DATABASE_URL);
+        }
+      })
+      .then(response => {
+        // Success Response
+        if (!response) return;
+        return response.json();
+      })
+      .then(restaurants => {
+        if (!restaurants) return;
+        DBHelper.updateRestaurantsInDb(restaurants, dbPromise);
         callback(null, restaurants);
-      } else {
-        // Oops!. Got an error from server.
-        const error = `Request failed. Returned status of ${xhr.status}`;
-        callback(error, null);
-      }
-    };
-    xhr.send();
+      })
+      .catch(error => {
+        const errorMessage = `Request failed. Error message: ${error}`;
+        callback(errorMessage, null);
+      });
   }
 
   /**
@@ -162,17 +204,19 @@ class DBHelper {
   }
 
   /**
-   * Restaurant image URL.
+   * Restaurant image URLS.
    */
-  static imageUrlForRestaurant(restaurant) {
-    return `/img/${restaurant.id}.jpg`;
+  static imageWebp(restaurant) {
+    return `build/img/webp/${restaurant.id}.webp`;
+  }
+  static imageJpg(restaurant) {
+    return `build/img/${restaurant.id}.jpg`;
   }
 
   /**
    * Map marker for a restaurant.
    */
   static mapMarkerForRestaurant(restaurant, map) {
-    // https://leafletjs.com/reference-1.3.0.html#marker
     const marker = new L.marker(
       [restaurant.latlng.lat, restaurant.latlng.lng],
       {
@@ -184,14 +228,5 @@ class DBHelper {
     marker.addTo(newMap);
     return marker;
   }
-  /* static mapMarkerForRestaurant(restaurant, map) {
-    const marker = new google.maps.Marker({
-      position: restaurant.latlng,
-      title: restaurant.name,
-      url: DBHelper.urlForRestaurant(restaurant),
-      map: map,
-      animation: google.maps.Animation.DROP}
-    );
-    return marker;
-  } */
 }
+export default DBHelper;
