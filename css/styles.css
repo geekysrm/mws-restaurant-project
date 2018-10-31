@@ -325,22 +325,70 @@ nav h1 a {
 #reviews-list li p {
   margin: 0 0 10px;
 }
-#reviews-list li p:nth-of-type(1) {
+#reviews-list li .review-name {
   padding-top: 10px;
   font-weight: bold;
   font-style: italic;
 }
-#reviews-list li p:nth-of-type(2) {
+#reviews-list li .review-date {
   font-weight: bold;
 }
-#reviews-list li p:nth-of-type(3) {
+#reviews-list li .review-rating {
   font-weight: bold;
 }
+
+#reviews-list li .review-comments {
+  padding: 0 20px 20px;
+}
+
 #restaurant-hours td {
   color: #666;
 }
 #restaurant-hours td:nth-of-type(1) {
   font-weight: bold;
+}
+.review-form {
+  display: flex;
+  flex-wrap: wrap;
+}
+.review-form-input {
+  padding: 15px;
+  border: 1px solid #d6dde2;
+  box-shadow: 0 2px 2px 0 rgba(46, 60, 73, 0.1);
+}
+.review-form-top {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.review-form-name {
+  width: 55%;
+}
+.review-form-rating {
+  width: 20%;
+}
+.review-form-comments {
+  width: 100%;
+  height: 80px;
+  background: #fff;
+  color: grey;
+  overflow-y: auto;
+}
+.btn-submit-review {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  background: #195994;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 3px 6px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+.btn-submit-review:hover {
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8) !important;
+}
+.btn-submit-review:focus {
+  outline: 0 !important;
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.8);
 }
 /*====== Media Queries ====*/
 

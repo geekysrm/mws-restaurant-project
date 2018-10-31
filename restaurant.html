@@ -62,6 +62,23 @@
       <!-- Beginning reviews -->
       <section id="reviews-container">
         <ul id="reviews-list"></ul>
+        <section class="review-input">
+          <h2> Write A Review </h2>
+          <form class="review-form">
+            <section class="review-form-top">
+              <input class="review-form-name review-form-input" name="name" aria-label="Enter your name" type="text"
+                placeholder="Your Name">
+              <input class="review-form-rating review-form-input" name="rating" aria-label="Enter restaurant rating"
+                type="number" placeholder="Rating">
+            </section>
+            <p class="review-form-comments review-form-input" contenteditable="true" name="comments" role="textbox"
+              aria-label="Enter your comments">Enter
+              Comments</p>
+            <!-- <textarea class="review-form-comments review-form-input" name="comments" id="comments" cols="30" rows="10"
+              aria-label="Enter your comments"></textarea> -->
+            <button type="button" name="submit" class="btn-submit-review"> SUBMIT YOUR REVIEW </button>
+          </form>
+        </section>
       </section>
     </div>
     <!-- End reviews -->
